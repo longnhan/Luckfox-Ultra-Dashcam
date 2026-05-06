@@ -16,17 +16,38 @@
 
 ## Software Architecture Layer
 
-The system bypasses heavy generic frameworks like OpenCV or standard V4L2 in favor of the official Rockchip SDK to guarantee maximum frame rates and hardware efficiency. 
+The system follows a "Direct-to-Silicon" architecture, bypassing generic frameworks like OpenCV to ensure maximum hardware efficiency, low latency, and minimal CPU overhead on the RV1106 SoC.
 
 | Layer | Component | Responsibility |
 | :--- | :--- | :--- |
-| **Application** | **Dashcam App (C/C++)** | Main thread loop, GPIO interrupt handling, state machine, and file I/O. |
-| **Framework** | **RK_MPI** | Orchestrates the video pipeline, binding the Video Input (VI) directly to the Video Encoder (VENC). |
-| **Image Processing** | **RKAIQ** | Controls the Image Signal Processor (ISP) for auto-exposure, white balance, and sensor tuning using `.iqfile` configurations. |
-| **Kernel** | **V4L2 / sysfs** | Low-level drivers for the MIS5001 sensor and GPIO button interrupts. |
-| **Hardware** | **MIS5001 / RV1106** | Physical MIPI CSI image capture and silicon-level H.265 encoding. |
+| **Application** | **Bodycam Logic (C)** | High-level state machine, file I/O management, and `libavformat` integration. |
+| **Framework** | **RK_MPI** | **Media Process Interface:** Orchestrates the pipeline by binding Video Input (VI) to Video Encoder (VENC) for zero-copy memory exchange. |
+| **Encoding** | **Rockchip MPP** | **Media Process Platform:** Handles hardware-accelerated H.264/H.265 compression logic and bitrate control. |
+| **Image Signal** | **Rockchip AIQ** | **ISP Engine:** Manages sensor-specific tuning (AE, AWB, Noise Reduction) for the MIS5001 using `.iqbin` configuration files. |
+| **I/O Control** | **libgpiod** | Modern C library for GPIO interaction; handles the hardware button interrupts to trigger recording states. |
+| **Muxing** | **FFmpeg (libavformat)** | Wraps raw H.26x streams into fragmented MP4 (fMP4) containers to prevent file corruption during sudden power loss. |
+| **Kernel/Driver** | **V4L2 / Video4Linux2** | Low-level Linux kernel drivers for the MIPI CSI sensor interface. |
 
 ---
+
+## Technical Implementation Details
+
+### 1. High-Efficiency Pipeline
+By utilizing **RK_MPI (Rockchip Media Process Interface)**, the video data stays within the hardware buffer (DMA-BUF) from capture to encoding. This "Zero-Copy" approach allows the RV1106 to record 1080p video while keeping CPU usage extremely low, preserving battery life for body-worn applications.
+
+### 2. Storage Integrity (fMP4)
+Standard MP4 files require a "moov atom" to be written at the end of recording. If the camera loses power or the SD card is ejected, the file becomes unplayable. This project uses **Fragmented MP4 (fMP4)** via `libavformat`, which writes metadata in continuous increments, ensuring that even if the system crashes, the video recorded up to that point is saved.
+
+### 3. Hardware Button Handling
+Instead of polling the CPU (which wastes power), the system uses **libgpiod** to listen for hardware interrupts on the Luckfox on-board button.
+* **Single Press:** Start/Stop Recording.
+* **Long Press:** System Shutdown / Toggle Wi-Fi (if applicable).
+
+### 4. ISP Tuning
+The **MIS5001** sensor is tuned via **RKAIQ**. The system loads a custom `.iqbin` file at runtime to optimize image quality for various lighting conditions, ensuring clear evidence capture in low-light environments.
+
+---
+
 
 ## Hardware Requirements
 
