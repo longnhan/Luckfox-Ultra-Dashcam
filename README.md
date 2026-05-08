@@ -63,30 +63,74 @@ The **MIS5001** sensor is tuned via **RKAIQ**. The system loads a custom `.iqbin
 
 ## Getting Started
 
-### 1. Prerequisites
-Because this targets the RV1106, you must build the project using the official Luckfox cross-compilation toolchain on a Linux host machine (e.g., Ubuntu). 
+### 1. Clone the repository
 
-Ensure you have cloned the Luckfox Pico SDK and exported your toolchain path:
 ```bash
-export LUCKFOX_SDK_PATH=/path/to/luckfox-pico
-export CROSS_COMPILE=arm-rockchip830-linux-uclibcgnueabihf-
+git clone <repo-url> Luckfox-Ultra-Dashcam
+cd Luckfox-Ultra-Dashcam
 ```
-### 2. Build Instructions
-The project uses CMake for easy cross-compilation mapping.
+
+### 2. Download and install the cross-compiler
+
+The Luckfox board runs **Buildroot** (uclibc), so you need the `arm-rockchip830-linux-uclibcgnueabihf` toolchain — **not** the glibc ARM toolchain.
+
+**Download from the Luckfox SDK** (inside the SDK archive or separately):
+
+| Toolchain | Target system | Source |
+|-----------|--------------|--------|
+| `arm-rockchip830-linux-uclibcgnueabihf` | Buildroot (Luckfox default) | Luckfox SDK download page |
+| `gcc-arm-11.2-2022.02-x86_64-arm-none-linux-gnueabihf` | Ubuntu rootfs (not used here) | ARM official website |
+
+Extract the Buildroot toolchain into the `toolchain/` folder inside this repo:
 
 ```bash
-# Prepare build environment
-mkdir build && cd build
+# Extract — adjust the filename to match your downloaded archive
+tar zxvf arm-rockchip830-linux-uclibcgnueabihf.tar.gz -C toolchain/
+```
 
-# Compile using the Luckfox toolchain configuration
+After extraction the layout should look like:
+```
+toolchain/
+└── arm-rockchip830-linux-uclibcgnueabihf/
+    ├── bin/
+    │   ├── arm-rockchip830-linux-uclibcgnueabihf-gcc
+    │   └── ...
+    └── ...
+```
+
+Export the toolchain and SDK paths (add to `~/.bashrc` or `~/.zshrc` to make permanent):
+
+```bash
+export LUCKFOX_SDK_PATH=/path/to/luckfox-pico   # full Luckfox SDK (for RK_MPI headers)
+export CROSS_COMPILE=arm-rockchip830-linux-uclibcgnueabihf-
+export PATH="$(pwd)/toolchain/arm-rockchip830-linux-uclibcgnueabihf/bin:$PATH"
+```
+
+> **Note:** The `toolchain/` directory is git-ignored. Each developer extracts the toolchain locally after cloning.
+
+### 3. Build
+
+```bash
+mkdir build && cd build
 cmake .. -DCMAKE_TOOLCHAIN_FILE=../cmake/luckfox.toolchain.cmake
 make -j$(nproc)
 ```
-### 3. Deployment
-Transfer the compiled binary and the required MIS5001 .iqfile to your Luckfox board via SSH or ADB:
+
+### 4. Deploy to the board
+
+Connect the Luckfox board via USB-C (USB RNDIS: board IP `172.32.0.70`).
+
 ```bash
-adb push build/luckfox_dashcam /userdata/
-adb push iqfiles/mis5001.json /etc/iqfiles/
+# Via ADB
+adb push build/bodycam /userdata/
+adb push iqfiles/mis5001.iqbin /etc/iqfiles/
+
+# Via SSH (once network is up)
+scp build/bodycam root@172.32.0.70:/userdata/
+scp iqfiles/mis5001.iqbin root@172.32.0.70:/etc/iqfiles/
+
+# Run on the board
+ssh root@172.32.0.70 "/userdata/bodycam"
 ```
 
 ## Performance Benchmarks
