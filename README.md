@@ -28,6 +28,57 @@ The system follows a "Direct-to-Silicon" architecture, bypassing generic framewo
 | **Muxing** | **FFmpeg (libavformat)** | Wraps raw H.26x streams into fragmented MP4 (fMP4) containers to prevent file corruption during sudden power loss. |
 | **Kernel/Driver** | **V4L2 / Video4Linux2** | Low-level Linux kernel drivers for the MIPI CSI sensor interface. |
 
+### End-to-end data flow
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  SENSOR                                                             │
+│                                                                     │
+│  MIS5001 ──MIPI CSI──► VI (Video Input)                            │
+│                              │                                      │
+│                         mis5001.iqbin                               │
+│                              ▼                                      │
+│                    ┌─── RKAIQ ISP ───┐                             │
+│                    │  AE / AWB / NR  │  ← tuning runs before VI    │
+│                    └────────┬────────┘                             │
+└─────────────────────────────┼───────────────────────────────────────┘
+                              │ DMA-BUF (zero-copy)
+                    RK_MPI_SYS_Bind(VI → VENC)
+                              │
+┌─────────────────────────────▼───────────────────────────────────────┐
+│  ENCODE                                                             │
+│                                                                     │
+│                    VENC ── Rockchip MPP ── H.265 packets           │
+│                              │                                      │
+└─────────────────────────────┼───────────────────────────────────────┘
+                              │
+               ┌──────────────┴──────────────┐
+               │  state machine decides       │
+               │  (button / storage events)   │
+               └──────┬───────────────┬───────┘
+                      │               │
+         ┌────────────▼──┐     ┌──────▼────────────┐
+         │  RECORD path  │     │   STREAM path      │
+         │               │     │                    │
+         │  fMP4 muxer   │     │  live555 RTSP      │
+         │ (libavformat) │     │  server (wlan0)    │
+         │  frag_keyframe│     │  port 8554         │
+         │  +empty_moov  │     │                    │
+         └──────┬────────┘     └──────┬─────────────┘
+                │                     │
+         ┌──────▼──────┐       ┌──────▼──────────────┐
+         │  SD card    │       │  Wi-Fi client        │
+         │ /mnt/sdcard │       │  rtsp://<ip>:8554/   │
+         │  .mp4 file  │       │  live                │
+         └─────────────┘       └─────────────────────-┘
+```
+
+**Key rules enforced by the flow:**
+- RKAIQ ISP **must start before** VI opens — frames are untuned otherwise.
+- `RK_MPI_SYS_Bind` keeps encoded data inside DMA buffers — **no CPU memcpy** between VI and VENC.
+- Both paths receive the **same encoded packet** — the state machine decides which sinks are active (record-only, stream-only, or both simultaneously).
+- fMP4 `frag_keyframe+empty_moov` flags commit metadata on every keyframe — files survive sudden power loss.
+
 ---
 
 ## Technical Implementation Details
