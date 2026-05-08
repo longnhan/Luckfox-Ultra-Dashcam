@@ -39,3 +39,12 @@
 
 # debug information files
 *.dwo
+
+# Build output
+build/
+
+# Cross-compiler toolchain (extracted locally after clone)
+toolchain/*/
+
+# IQ tuning binary (device-specific, not in repo)
+iqfiles/*.iqbin

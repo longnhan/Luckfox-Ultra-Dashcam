@@ -1,0 +1,5 @@
+# Ignore the extracted toolchain directories — extract locally after clone.
+# Only .gitkeep and this file are tracked.
+*
+!.gitkeep
+!.gitignore
