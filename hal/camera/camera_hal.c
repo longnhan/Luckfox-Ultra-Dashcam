@@ -1,5 +1,6 @@
 #include "camera/camera_hal.h"
 #include <assert.h>
+#include <stddef.h>
 
 static const cam_ops_t *g_ops = NULL;
 

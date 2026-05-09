@@ -1,5 +1,6 @@
 #include "encoder/encoder_hal.h"
 #include <assert.h>
+#include <stddef.h>
 
 static const enc_ops_t *g_ops = NULL;
 

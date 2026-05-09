@@ -1,5 +1,6 @@
 #include "isp/isp.h"
 #include <assert.h>
+#include <stddef.h>
 
 static const isp_ops_t *g_ops = NULL;
 

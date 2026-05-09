@@ -1,5 +1,6 @@
 #include "gpio/gpio_hal.h"
 #include <assert.h>
+#include <stddef.h>
 
 static const gpio_ops_t *g_ops = NULL;
 

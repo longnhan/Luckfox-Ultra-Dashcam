@@ -1,5 +1,6 @@
 #include "pipeline/pipeline.h"
 #include <assert.h>
+#include <stddef.h>
 
 static const pipeline_ops_t *g_ops = NULL;
 

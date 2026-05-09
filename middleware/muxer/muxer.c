@@ -1,5 +1,6 @@
 #include "muxer/muxer.h"
 #include <assert.h>
+#include <stddef.h>
 
 static const muxer_ops_t *g_ops = NULL;
 

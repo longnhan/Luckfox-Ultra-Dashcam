@@ -1,5 +1,6 @@
 #include "rtsp/rtsp.h"
 #include <assert.h>
+#include <stddef.h>
 
 static const rtsp_ops_t *g_ops = NULL;
 
