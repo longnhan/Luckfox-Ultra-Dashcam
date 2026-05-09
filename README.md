@@ -112,6 +112,95 @@ The **MIS5001** sensor is tuned via **RKAIQ**. The system loads a custom `.iqbin
 
 ---
 
+## Board Specifications (Verified)
+
+> Collected from a live Luckfox Ultra B via SSH — 2025-05-09.
+
+### System
+
+| Field | Value |
+| :--- | :--- |
+| **OS** | Ubuntu 22.04.5 LTS (Jammy Jellyfish) |
+| **Kernel** | Linux 5.10.160, armv7l |
+| **CPU** | ARMv7 Cortex-A7 rev 5, single core — 48 BogoMIPS |
+| **RAM** | ~211 MB total, ~158 MB available at idle |
+| **Serial** | `20782c5dadb76845` |
+
+### eMMC partition layout
+
+| Device | Size | Mount | Purpose |
+| :--- | :--- | :--- | :--- |
+| `/dev/mmcblk0` (root) | 5.9 GB | `/` | Root filesystem |
+| `/dev/mmcblk0p5` | 488 MB | `/oem` | Rockchip SDK libs & IQ files |
+| `/dev/mmcblk0p6` | 238 MB | `/userdata` | Application binaries (deploy here) |
+
+> There is **no SD card slot** on the board itself. The MicroSD card is attached via USB OTG and appears as `/dev/sda1`.
+
+### Network interfaces
+
+| Interface | State | IP | Purpose |
+| :--- | :--- | :--- | :--- |
+| `usb0` | UP | `172.32.0.70` | USB RNDIS — dev access from host |
+| `wlan0` | UP | DHCP (e.g. `10.176.68.91`) | Wi-Fi — RTSP stream target |
+| `eth0` | DOWN | — | Unused |
+
+### GPIO
+
+5 GPIO chips present: `gpio0`–`gpio3` (32 lines each), `gpio4` (24 lines).
+Button is wired to **chip 0, line 14** (`CFG_GPIO_CHIP=0`, `CFG_GPIO_LINE=14` in [app/config.h](app/config.h)).
+
+### Pre-installed Rockchip libraries
+
+These are shipped with the firmware and require **no manual installation**:
+
+| Library | Path | Purpose |
+| :--- | :--- | :--- |
+| `librockchip_mpp.so` | `/oem/usr/lib/` | MPP hardware codec (VENC/VDEC) |
+| `librkaiq.so` | `/oem/usr/lib/`, `/usr/lib/` | ISP tuning engine (AE/AWB/NR) |
+| `librga.so` | `/oem/usr/lib/`, `/usr/lib/` | 2D graphics acceleration |
+| `librockit.so` | `/oem/usr/lib/` | Rockchip media toolkit |
+| `librknnmrt.so` | `/oem/usr/lib/` | RKNN NPU runtime |
+
+### IQ files present on board
+
+```
+/etc/iqfiles/mis5001_CMK-OT2115-PC1_30IRC-F16.json   ← MIS5001 (this project)
+/etc/iqfiles/sc3336_CMK-OT2119-PC1_30IRC-F16.json
+/etc/iqfiles/sc4336_OT01_40IRC_F16.json
+```
+
+---
+
+## Board Library Dependencies
+
+The board runs **Ubuntu 22.04** — use `apt` to install missing runtime libraries.
+
+### What to install
+
+```bash
+# On the board (SSH or ADB shell)
+sudo apt update
+
+# libgpiod — GPIO button handling
+sudo apt install -y libgpiod2
+
+# FFmpeg — fMP4 muxer (libavformat / libavcodec / libavutil)
+sudo apt install -y libavformat58 libavcodec58 libavutil56
+
+# live555 — RTSP server (needed when live555_rtsp.c TODOs are implemented)
+sudo apt install -y liblivemedia-dev
+```
+
+### Verify all runtime dependencies resolve
+
+```bash
+ldd /userdata/bodycam
+```
+
+All lines should say a path, not `not found`.
+
+---
+
 ## Getting Started
 
 ### 1. Clone the repository
@@ -123,16 +212,16 @@ cd Luckfox-Ultra-Dashcam
 
 ### 2. Download and install the cross-compiler
 
-The Luckfox board runs **Buildroot** (uclibc), so you need the `arm-rockchip830-linux-uclibcgnueabihf` toolchain — **not** the glibc ARM toolchain.
+The Luckfox board runs **Ubuntu 22.04 (glibc)**, so you need the `arm-none-linux-gnueabihf` glibc toolchain — **not** the uclibc buildroot toolchain.
 
-**Download from the Luckfox SDK** (inside the SDK archive or separately):
+**Download:**
 
 | Toolchain | Target system | Source |
 |-----------|--------------|--------|
-| `arm-rockchip830-linux-uclibcgnueabihf` | Buildroot (Luckfox default) | Luckfox SDK download page |
-| `gcc-arm-11.2-2022.02-x86_64-arm-none-linux-gnueabihf` | Ubuntu rootfs (not used here) | ARM official website |
+| `gcc-arm-11.2-2022.02-x86_64-arm-none-linux-gnueabihf` | Ubuntu 22.04 / glibc (this project) | ARM official website |
+| `arm-rockchip830-linux-uclibcgnueabihf` | Buildroot / uclibc (not used here) | Luckfox SDK download page |
 
-Extract the Buildroot toolchain into the `toolchain/` folder inside this repo:
+Extract the toolchain into the `toolchain/` folder inside this repo:
 
 ```bash
 # Extract — adjust the filename to match your downloaded archive
