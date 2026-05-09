@@ -48,3 +48,6 @@ toolchain/*/
 
 # IQ tuning binary (device-specific, not in repo)
 iqfiles/*.iqbin
+
+# Sysroot — board libs rsynced locally, not committed
+sysroot/
