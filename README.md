@@ -175,20 +175,32 @@ These are shipped with the firmware and require **no manual installation**:
 
 The board runs **Ubuntu 22.04** — use `apt` to install missing runtime libraries.
 
-### What to install
+### Pre-installed — no action needed
+
+All libraries required by the current implementation are already present on the board:
+
+| Library | Version | Purpose |
+| :--- | :--- | :--- |
+| `libgpiod2` | 1.6.3 | GPIO button handling |
+| `libgpiod-dev` | 1.6.3 | Headers for cross-compile sysroot |
+| `libavformat58` | 4.4.2 | fMP4 muxer |
+| `libavcodec58` | 4.4.2 | FFmpeg codec layer |
+| `libavutil56` | 4.4.2 | FFmpeg utilities |
+| `librockchip_mpp.so` | — | MPP hardware encoder |
+| `librkaiq.so` | — | ISP tuning engine |
+
+### live555 — build from source (future)
+
+`liblivemedia-dev` is **not available** in the Ubuntu 22.04 armhf repos. Install it from source only when the `live555_rtsp.c` TODOs are implemented:
 
 ```bash
-# On the board (SSH or ADB shell)
-sudo apt update
-
-# libgpiod — GPIO button handling
-sudo apt install -y libgpiod2
-
-# FFmpeg — fMP4 muxer (libavformat / libavcodec / libavutil)
-sudo apt install -y libavformat58 libavcodec58 libavutil56
-
-# live555 — RTSP server (needed when live555_rtsp.c TODOs are implemented)
-sudo apt install -y liblivemedia-dev
+# On the board
+cd /tmp
+wget http://www.live555.com/liveMedia/public/live555-latest.tar.gz
+tar xzf live555-latest.tar.gz && cd live
+./genMakefiles linux-with-shared-libraries
+make -j2
+sudo make install
 ```
 
 ### Verify all runtime dependencies resolve
