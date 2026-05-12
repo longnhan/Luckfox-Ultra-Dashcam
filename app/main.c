@@ -120,7 +120,9 @@ int main(void) {
 
     /* --- App state machine --- */
     sm_init();
-    LOG_I("Bodycam ready. Short press = record, long press = stream.");
+    rtsp_start();   /* stream always on; button only controls recording */
+    LOG_I("Bodycam ready. Press button to record. Streaming on rtsp://<wifi_ip>:%d/%s",
+          CFG_RTSP_PORT, CFG_RTSP_STREAM);
 
     /* --- Main encode/mux loop --- */
     while (!g_quit) {
@@ -150,9 +152,7 @@ int main(void) {
                 }
             }
 
-            if (state == STATE_STREAMING || state == STATE_RECORDING_AND_STREAMING) {
-                rtsp_push_packet(pkt.data, pkt.size, pkt.timestamp_us, pkt.is_keyframe);
-            }
+            rtsp_push_packet(pkt.data, pkt.size, pkt.timestamp_us, pkt.is_keyframe);
 
             enc_release_packet(&pkt);
         }

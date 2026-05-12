@@ -1,5 +1,6 @@
 #include "rkmpi_pipeline.h"
 #include "log.h"
+#include <stddef.h>
 
 /* rk_common.h, rk_mpi_sys.h pulled in via SDK include path */
 

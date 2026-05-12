@@ -1,5 +1,6 @@
 #include "rkaiq_isp.h"
 #include "log.h"
+#include <stddef.h>
 
 /* rk_aiq_user_api2_sysctl.h pulled in via SDK include path */
 

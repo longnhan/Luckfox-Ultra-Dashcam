@@ -50,56 +50,27 @@ void sm_init(void) {
     LOG_I("[sm] idle");
 }
 
+/* Temporary mode: streaming is always on; button only controls recording. */
 void sm_handle_event(app_event_t event) {
     switch (g_state) {
 
     case STATE_IDLE:
-        if (event == EVENT_BUTTON_SHORT_PRESS) {
+        if (event == EVENT_BUTTON_SHORT_PRESS || event == EVENT_BUTTON_LONG_PRESS) {
             start_recording();
             g_state = STATE_RECORDING;
-        } else if (event == EVENT_BUTTON_LONG_PRESS) {
-            start_streaming();
-            g_state = STATE_STREAMING;
         }
         break;
 
     case STATE_RECORDING:
-        if (event == EVENT_BUTTON_SHORT_PRESS) {
-            stop_recording();
-            g_state = STATE_IDLE;
-        } else if (event == EVENT_BUTTON_LONG_PRESS) {
-            start_streaming();
-            g_state = STATE_RECORDING_AND_STREAMING;
-        } else if (event == EVENT_STORAGE_FULL || event == EVENT_ERROR) {
+        if (event == EVENT_BUTTON_SHORT_PRESS || event == EVENT_BUTTON_LONG_PRESS ||
+            event == EVENT_STORAGE_FULL || event == EVENT_ERROR) {
             stop_recording();
             g_state = STATE_IDLE;
         }
         break;
 
     case STATE_STREAMING:
-        if (event == EVENT_BUTTON_SHORT_PRESS) {
-            start_recording();
-            g_state = STATE_RECORDING_AND_STREAMING;
-        } else if (event == EVENT_BUTTON_LONG_PRESS) {
-            stop_streaming();
-            g_state = STATE_IDLE;
-        }
-        break;
-
     case STATE_RECORDING_AND_STREAMING:
-        if (event == EVENT_BUTTON_SHORT_PRESS) {
-            stop_recording();
-            g_state = STATE_STREAMING;
-        } else if (event == EVENT_BUTTON_LONG_PRESS) {
-            stop_recording();
-            stop_streaming();
-            g_state = STATE_IDLE;
-        } else if (event == EVENT_STORAGE_FULL || event == EVENT_ERROR) {
-            stop_recording();
-            g_state = STATE_STREAMING;
-        }
-        break;
-
     case STATE_SHUTDOWN:
         break;
     }
