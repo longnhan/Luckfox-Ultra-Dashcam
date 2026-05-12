@@ -1,5 +1,5 @@
 #include "live555_rtsp.h"
-#include <stdio.h>
+#include "log.h"
 #include <pthread.h>
 
 /* live555 headers (liveMedia, groupsock, UsageEnvironment, BasicUsageEnvironment)
@@ -19,14 +19,14 @@ static void *rtsp_thread(void *arg) {
      *   H264or5VideoStreamFramer, RTPSink, etc.
      *   env->taskScheduler().doEventLoop(&g_running);
      */
-    printf("[live555] RTSP event loop started on port %d\n", g_cfg.port);
+    LOG_I("[live555] RTSP event loop started on port %d", g_cfg.port);
     while (g_running) { /* event loop placeholder */ }
     return NULL;
 }
 
 static int live555_init(const rtsp_config_t *cfg) {
     g_cfg = *cfg;
-    printf("[live555] init rtsp://0.0.0.0:%d/%s\n", cfg->port, cfg->stream_name);
+    LOG_I("[live555] init rtsp://0.0.0.0:%d/%s", cfg->port, cfg->stream_name);
     return 0;
 }
 
@@ -44,11 +44,11 @@ static int live555_push_packet(const void *data, size_t size, uint64_t pts_us, i
 static void live555_stop(void) {
     g_running = 0;
     pthread_join(g_thread, NULL);
-    printf("[live555] stopped\n");
+    LOG_I("[live555] stopped");
 }
 
 static void live555_deinit(void) {
-    printf("[live555] deinit\n");
+    LOG_I("[live555] deinit");
 }
 
 static const rtsp_ops_t g_live555_ops = {

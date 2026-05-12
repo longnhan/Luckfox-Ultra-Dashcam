@@ -1,5 +1,5 @@
 #include "sdcard_storage.h"
-#include <stdio.h>
+#include "log.h"
 #include <sys/mount.h>
 #include <sys/statvfs.h>
 #include <fcntl.h>
@@ -15,18 +15,18 @@ static int sdcard_mount(const char *device, const char *mountpoint) {
     if (mount(device, mountpoint, "vfat", MS_NOATIME, NULL) < 0) {
         /* already mounted or exfat — try remount */
         if (errno != EBUSY) {
-            perror("[sdcard] mount");
+            LOG_E("[sdcard] mount: %s", strerror(errno));
             return -1;
         }
     }
-    printf("[sdcard] mounted %s → %s\n", device, mountpoint);
+    LOG_I("[sdcard] mounted %s -> %s", device, mountpoint);
     return 0;
 }
 
 static int sdcard_open_file(const char *path) {
     g_fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (g_fd < 0) {
-        perror("[sdcard] open_file");
+        LOG_E("[sdcard] open_file: %s", strerror(errno));
         return -1;
     }
     return 0;
@@ -48,7 +48,7 @@ static int sdcard_close_file(void) {
 static int sdcard_get_free_bytes(uint64_t *out) {
     struct statvfs st;
     if (statvfs(g_mountpoint, &st) < 0) {
-        perror("[sdcard] statvfs");
+        LOG_E("[sdcard] statvfs: %s", strerror(errno));
         return -1;
     }
     *out = (uint64_t)st.f_bavail * st.f_frsize;
@@ -58,7 +58,7 @@ static int sdcard_get_free_bytes(uint64_t *out) {
 static void sdcard_unmount(void) {
     sdcard_close_file();
     umount(g_mountpoint);
-    printf("[sdcard] unmounted %s\n", g_mountpoint);
+    LOG_I("[sdcard] unmounted %s", g_mountpoint);
 }
 
 static const storage_ops_t g_sdcard_ops = {

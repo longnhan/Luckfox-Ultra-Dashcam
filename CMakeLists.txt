@@ -29,10 +29,12 @@ include_directories(
     ${CMAKE_SOURCE_DIR}/hal
     ${CMAKE_SOURCE_DIR}/middleware
     ${CMAKE_SOURCE_DIR}/app
+    ${CMAKE_SOURCE_DIR}/common
 )
 
 link_directories(${SDK_LIB_DIR})
 
+add_subdirectory(common)
 add_subdirectory(hal)
 add_subdirectory(middleware)
 add_subdirectory(app)

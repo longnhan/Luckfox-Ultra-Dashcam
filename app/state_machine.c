@@ -3,7 +3,7 @@
 #include "muxer/muxer.h"
 #include "rtsp/rtsp.h"
 #include "storage/storage_hal.h"
-#include <stdio.h>
+#include "log.h"
 #include <time.h>
 
 static app_state_t g_state = STATE_IDLE;
@@ -23,31 +23,31 @@ static void start_recording(void) {
         .is_h265  = CFG_CODEC_H265,
     };
     if (muxer_open(path, &mcfg) < 0) {
-        fprintf(stderr, "[sm] failed to open muxer\n");
+        LOG_E("[sm] failed to open muxer");
         return;
     }
-    printf("[sm] recording → %s\n", path);
+    LOG_I("[sm] recording → %s", path);
 }
 
 static void stop_recording(void) {
     muxer_close();
-    printf("[sm] recording stopped\n");
+    LOG_I("[sm] recording stopped");
 }
 
 static void start_streaming(void) {
     rtsp_start();
-    printf("[sm] RTSP stream live at rtsp://<wifi_ip>:%d/%s\n",
-           CFG_RTSP_PORT, CFG_RTSP_STREAM);
+    LOG_I("[sm] RTSP stream live at rtsp://<wifi_ip>:%d/%s",
+          CFG_RTSP_PORT, CFG_RTSP_STREAM);
 }
 
 static void stop_streaming(void) {
     rtsp_stop();
-    printf("[sm] RTSP stopped\n");
+    LOG_I("[sm] RTSP stopped");
 }
 
 void sm_init(void) {
     g_state = STATE_IDLE;
-    printf("[sm] idle\n");
+    LOG_I("[sm] idle");
 }
 
 void sm_handle_event(app_event_t event) {

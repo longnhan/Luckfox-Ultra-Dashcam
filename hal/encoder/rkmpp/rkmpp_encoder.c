@@ -1,5 +1,5 @@
 #include "rkmpp_encoder.h"
-#include <stdio.h>
+#include "log.h"
 
 /* rk_mpi_venc.h, rk_mpi_mb.h pulled in via SDK include path */
 
@@ -8,8 +8,8 @@ static enc_config_t g_cfg;
 static int rkmpp_init(const enc_config_t *cfg) {
     g_cfg = *cfg;
     /* TODO: RK_MPI_VENC_CreateChn(), set RC params, H.264/H.265 profile */
-    printf("[rkmpp] init codec=%d %dx%d @%dfps %dkbps\n",
-           cfg->codec, cfg->width, cfg->height, cfg->fps, cfg->bitrate_kbps);
+    LOG_I("[rkmpp] init codec=%d %dx%d @%dfps %dkbps",
+          cfg->codec, cfg->width, cfg->height, cfg->fps, cfg->bitrate_kbps);
     return 0;
 }
 
@@ -33,7 +33,7 @@ static int rkmpp_stop(void) {
 
 static void rkmpp_deinit(void) {
     /* TODO: RK_MPI_VENC_DestroyChn() */
-    printf("[rkmpp] deinit\n");
+    LOG_I("[rkmpp] deinit");
 }
 
 static const enc_ops_t g_rkmpp_ops = {

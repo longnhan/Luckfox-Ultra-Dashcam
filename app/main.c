@@ -25,7 +25,7 @@
 #include "muxer/muxer.h"
 #include "rtsp/rtsp.h"
 
-#include <stdio.h>
+#include "log.h"
 #include <signal.h>
 #include <unistd.h>
 
@@ -44,6 +44,7 @@ static void on_button(gpio_event_t event) {
 }
 
 int main(void) {
+    log_init();
     signal(SIGINT,  on_signal);
     signal(SIGTERM, on_signal);
 
@@ -59,7 +60,7 @@ int main(void) {
 
     /* --- Storage --- */
     if (storage_mount(CFG_SD_DEVICE, CFG_SD_MOUNTPOINT) < 0) {
-        fprintf(stderr, "No SD card — recording disabled\n");
+        LOG_E("No SD card — recording disabled");
     }
 
     /* --- ISP --- */
@@ -119,7 +120,7 @@ int main(void) {
 
     /* --- App state machine --- */
     sm_init();
-    printf("Bodycam ready. Short press = record, long press = stream.\n");
+    LOG_I("Bodycam ready. Short press = record, long press = stream.");
 
     /* --- Main encode/mux loop --- */
     while (!g_quit) {
@@ -174,6 +175,7 @@ int main(void) {
     isp_deinit();
     storage_unmount();
 
-    printf("Bodycam shutdown complete.\n");
+    LOG_I("Bodycam shutdown complete.");
+    log_deinit();
     return 0;
 }

@@ -1,7 +1,7 @@
 #include "fmp4_muxer.h"
+#include "log.h"
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
-#include <stdio.h>
 
 static AVFormatContext *g_fmt_ctx  = NULL;
 static AVStream        *g_stream   = NULL;
@@ -33,9 +33,9 @@ static int fmp4_open(const char *filepath, const muxer_config_t *cfg) {
     if (avformat_write_header(g_fmt_ctx, NULL) < 0) goto fail;
 
     g_pkt_idx = 0;
-    printf("[fmp4] opened %s (%s %dx%d @%dfps)\n",
-           filepath, cfg->is_h265 ? "H.265" : "H.264",
-           cfg->width, cfg->height, cfg->fps);
+    LOG_I("[fmp4] opened %s (%s %dx%d @%dfps)",
+          filepath, cfg->is_h265 ? "H.265" : "H.264",
+          cfg->width, cfg->height, cfg->fps);
     return 0;
 
 fail:
@@ -68,7 +68,7 @@ static int fmp4_close(void) {
         avio_closep(&g_fmt_ctx->pb);
     avformat_free_context(g_fmt_ctx);
     g_fmt_ctx = NULL;
-    printf("[fmp4] closed (%lld packets)\n", (long long)g_pkt_idx);
+    LOG_I("[fmp4] closed (%lld packets)", (long long)g_pkt_idx);
     return 0;
 }
 

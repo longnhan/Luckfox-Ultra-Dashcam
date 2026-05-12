@@ -1,8 +1,10 @@
 #include "gpiod_button.h"
+#include "log.h"
 #include <gpiod.h>
 #include <pthread.h>
-#include <stdio.h>
 #include <time.h>
+#include <errno.h>
+#include <string.h>
 
 static struct gpiod_chip   *g_chip     = NULL;
 static struct gpiod_line   *g_line     = NULL;
@@ -38,14 +40,14 @@ static void *listen_thread(void *arg) {
 static int gpiod_init(int chip, int line, int long_press_ms) {
     g_long_ms = long_press_ms;
     g_chip = gpiod_chip_open_by_number(chip);
-    if (!g_chip) { perror("[gpiod] open chip"); return -1; }
+    if (!g_chip) { LOG_E("[gpiod] open chip: %s", strerror(errno)); return -1; }
     g_line = gpiod_chip_get_line(g_chip, line);
-    if (!g_line) { perror("[gpiod] get line"); return -1; }
+    if (!g_line) { LOG_E("[gpiod] get line: %s", strerror(errno)); return -1; }
     if (gpiod_line_request_both_edges_events(g_line, "bodycam") < 0) {
-        perror("[gpiod] request events");
+        LOG_E("[gpiod] request events: %s", strerror(errno));
         return -1;
     }
-    printf("[gpiod] watching chip%d line%d (long_press=%dms)\n", chip, line, long_press_ms);
+    LOG_I("[gpiod] watching chip%d line%d (long_press=%dms)", chip, line, long_press_ms);
     return 0;
 }
 

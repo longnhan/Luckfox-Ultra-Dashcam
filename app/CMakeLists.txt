@@ -9,4 +9,4 @@ target_include_directories(bodycam PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(bodycam PRIVATE middleware hal)
+target_link_libraries(bodycam PRIVATE middleware hal common)

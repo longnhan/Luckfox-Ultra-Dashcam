@@ -10,4 +10,4 @@ add_library(middleware STATIC
 )
 
 target_include_directories(middleware PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(middleware PUBLIC hal avformat avcodec avutil pthread)
+target_link_libraries(middleware PUBLIC common hal avformat avcodec avutil pthread)

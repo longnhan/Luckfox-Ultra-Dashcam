@@ -1,5 +1,5 @@
 #include "mis5001_camera.h"
-#include <stdio.h>
+#include "log.h"
 
 /* rk_mpi_sys.h, rk_mpi_vi.h pulled in via SDK include path */
 
@@ -8,14 +8,14 @@ static cam_config_t g_cfg;
 static int mis5001_init(const cam_config_t *cfg) {
     g_cfg = *cfg;
     /* TODO: RK_MPI_SYS_Init(), VI channel open, bind ISP */
-    printf("[mis5001] init %dx%d @%dfps iqbin=%s\n",
-           cfg->width, cfg->height, cfg->fps, cfg->iqbin_path);
+    LOG_I("[mis5001] init %dx%d @%dfps iqbin=%s",
+          cfg->width, cfg->height, cfg->fps, cfg->iqbin_path);
     return 0;
 }
 
 static int mis5001_start(void) {
     /* TODO: RK_MPI_VI_EnableChn() */
-    printf("[mis5001] start\n");
+    LOG_I("[mis5001] start");
     return 0;
 }
 
@@ -32,13 +32,13 @@ static void mis5001_release_frame(cam_frame_t *frame) {
 
 static int mis5001_stop(void) {
     /* TODO: RK_MPI_VI_DisableChn() */
-    printf("[mis5001] stop\n");
+    LOG_I("[mis5001] stop");
     return 0;
 }
 
 static void mis5001_deinit(void) {
     /* TODO: RK_MPI_SYS_Exit() */
-    printf("[mis5001] deinit\n");
+    LOG_I("[mis5001] deinit");
 }
 
 static const cam_ops_t g_mis5001_ops = {
